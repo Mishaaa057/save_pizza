@@ -21,6 +21,7 @@ class Pizza(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom = (SCREEN_W//2, 300))
         self.pizza_speed = 5
         self.gravity = 0
+        self.maks = pygame.mask.from_surface(self.image)
         self.jump_sound = pygame.mixer.Sound("audio/jump.mp3")
         self.jump_sound.set_volume(0.1)
     
@@ -63,6 +64,7 @@ class Obstacle(pygame.sprite.Sprite):
             
 
         self.image = pygame.image.load("graphics/pineapple.png").convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(midbottom = (spawn_x, spawn_y))
         
     def update(self):
@@ -88,7 +90,7 @@ def display_score(screen, font, start_time):
 
 
 def collision(pizza, pineapple):
-    if pygame.sprite.spritecollide(pizza.sprite, pineapple, False):
+    if pygame.sprite.spritecollide(pizza.sprite, pineapple, False, collided=pygame.sprite.collide_mask):
         return True
     return False
 
