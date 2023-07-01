@@ -17,36 +17,85 @@ class Pizza(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.image = pygame.image.load("graphics/empty_pizza.png").convert_alpha()
-        self.rect = self.image.get_rect(midbottom = (SCREEN_W//2, 300))
-        self.pizza_speed = 5
-        self.gravity = 0
-        self.maks = pygame.mask.from_surface(self.image)
+        # Frames and image
+        self.frame_stand = pygame.image.load("graphics/empty_pizza.png").convert_alpha()
+        self.frame_right_1 = pygame.transform.rotate(self.frame_stand, 22)
+        self.frame_left_1 = pygame.transform.rotate(self.frame_stand, -22)
+        self.frame_right_2 = pygame.transform.rotate(self.frame_stand, 45)
+        self.frame_left_2 = pygame.transform.rotate(self.frame_stand, -45)
+        self.frames = [self.frame_left_1, self.frame_left_2, self.frame_stand, self.frame_right_1, self.frame_right_2]
+        self.index = 2
+        self.frames_speed = 0.15
+        self.image = self.frames[self.index]
+
+        # Rect
+        self.rect_original = self.frame_stand.get_rect(midbottom = (SCREEN_W//2, 300))
+        self.rect = self.rect_original
+
+        # Sounds
         self.jump_sound = pygame.mixer.Sound("audio/jump.mp3")
         self.jump_sound.set_volume(0.1)
+
+        # Variables
+        self.pizza_speed = 5
+        self.gravity = 0
+        self.animaiton_direction = None
+        self.maks = pygame.mask.from_surface(self.image)
+        
     
     def apply_gravity(self):
         self.gravity += 1
-        self.rect.y += self.gravity
-        if self.rect.bottom >= 300:
-            self.rect.bottom = 300
+        self.rect_original.y += self.gravity
+        if self.rect_original.bottom >= 300:
+            self.rect_original.bottom = 300
             self.gravity = 0
+        self.rect = self.image.get_rect(center = self.rect_original.center)
         
 
     def movement(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
-            self.rect.x += self.pizza_speed
+            self.rect_original.x += self.pizza_speed
+            self.animaiton_direction = 'right'
         elif keys[pygame.K_LEFT]:
-            self.rect.x -= self.pizza_speed
+            self.rect_original.x -= self.pizza_speed
+            self.animaiton_direction = 'left'
+        else:
+            self.animaiton_direction = None
         
         if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
-            if self.rect.bottom >= 300:
+            if self.rect_original.bottom >= 300:
                 self.gravity -= 20
                 self.jump_sound.play()
+        self.rect = self.image.get_rect(center = self.rect_original.center)
+
+    def animation(self):
+        if self.animaiton_direction == 'right':
+            self.index += self.frames_speed
+            rounded_index = int(self.index)
+            
+            if rounded_index < len(self.frames):
+                self.image = self.frames[rounded_index]
+            else:
+                self.index = 0
+            
+        elif self.animaiton_direction == 'left':
+            self.index -= self.frames_speed
+            rounded_index = int(self.index)
+            
+            if rounded_index >= 0:
+                self.image = self.frames[rounded_index]
+            else:
+                self.index = len(self.frames)-1
+        else:
+            #self.image = self.frame_stand
+            pass
+        self.rect = self.image.get_rect(center = self.rect_original.center)
+        
 
     def update(self):
         self.apply_gravity()
+        self.animation()
         self.movement()
 
 
@@ -62,7 +111,6 @@ class Obstacle(pygame.sprite.Sprite):
             spawn_x = randint(-400, -100)
             self.pineapple_speed *= -1
             
-
         self.image = pygame.image.load("graphics/pineapple.png").convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect(midbottom = (spawn_x, spawn_y))
@@ -152,7 +200,7 @@ def main():
                     pineapple.add(Obstacle(direction=dir, spawn_y=y))
                     
             else:
-                if event.type == pygame.KEYDOWN:
+                if event.type == pygame.KEYUP :
                     if event.key == pygame.K_SPACE:
                         GAME_ACTIVE = True
                         start_time = pygame.time.get_ticks()
