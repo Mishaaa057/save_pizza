@@ -40,7 +40,7 @@ class Pizza(pygame.sprite.Sprite):
         elif keys[pygame.K_LEFT]:
             self.rect.x -= self.pizza_speed
         
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
             if self.rect.bottom >= 300:
                 self.gravity -= 20
                 self.jump_sound.play()
@@ -151,8 +151,6 @@ def main():
                         y = 220
                     pineapple.add(Obstacle(direction=dir, spawn_y=y))
                     
-                    
-
             else:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
